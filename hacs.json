@@ -1,9 +1,4 @@
 {
   "name": "HS Command Listener",
-  "category": "integration",
-  "content_in_root": false,
-  "domain": "hs_command_listener",
-  "zip_release": false,
-  "filename": "hs_command_listener",
-  "render_readme": true
+  "category": "integration"
 }
