@@ -4,6 +4,11 @@ from homeassistant.helpers import discovery
 from .command_processor import CommandProcessor
 from .const import DOMAIN, STORAGE_KEY, ENTITY_ID_COMMAND
 
+import voluptuous as vol
+
+CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
+
+
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
