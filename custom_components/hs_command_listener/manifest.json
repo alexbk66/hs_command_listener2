@@ -1,7 +1,7 @@
 {
   "domain": "hs_command_listener",
   "name": "HS Command Listener",
-  "version": "1.8",
+  "version": "1.9",
   "documentation": "https://github.com/alexbk66/HSPI_AKHomeAssistant/tree/master/hs_command_listener",
   "dependencies": [],
   "codeowners": [ "@alexbk66" ],
