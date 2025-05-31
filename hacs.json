@@ -1,0 +1,8 @@
+{
+  "name": "HS Command Listener",
+  "content_in_root": false,
+  "domain": "hs_command_listener",
+  "zip_release": false,
+  "filename": "hs_command_listener",
+  "render_readme": true
+}
