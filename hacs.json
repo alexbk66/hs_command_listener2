@@ -1,4 +1,4 @@
 {
   "name": "HS Command Listener",
-  "category": "integration"
+  "domain": "hs_command_listener",
 }
