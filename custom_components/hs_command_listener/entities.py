@@ -4,7 +4,21 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.components.number import NumberEntity
 from homeassistant.components.select import SelectEntity
 
+from .const import DOMAIN, TITLE
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_device_info():
+    info =  {
+        "identifiers": {(DOMAIN, "hs_bridge")},
+        "name": "HomeSeer Bridge",
+        "manufacturer": "AlexBK66",
+        "model": TITLE,
+    }
+    _LOGGER.debug("Returning device_info: %s", info)
+    return info
+
 
 class DynamicToggle(SwitchEntity):
     def __init__(self, entity_id, name):
@@ -14,6 +28,10 @@ class DynamicToggle(SwitchEntity):
         self._attr_is_on = False
         self._attr_should_poll = False
         self.platform = "switch"
+
+    @property
+    def device_info(self):
+        return get_device_info()
 
     @property
     def unique_id(self):
@@ -50,6 +68,10 @@ class DynamicButton(ButtonEntity):
         self._pressed = False
 
     @property
+    def device_info(self):
+        return get_device_info()
+
+    @property
     def unique_id(self):
         return self._attr_unique_id
 
@@ -71,6 +93,10 @@ class DynamicNumber(NumberEntity):
         self._attr_should_poll = False
 
     @property
+    def device_info(self):
+        return get_device_info()
+
+    @property
     def unique_id(self):
         return self._attr_unique_id
 
@@ -88,6 +114,10 @@ class DynamicSelect(SelectEntity):
         self._attr_options = ["Option 1", "Option 2", "Option 3"]
         self._attr_current_option = self._attr_options[0]
         self._attr_should_poll = False
+
+    @property
+    def device_info(self):
+        return get_device_info()
 
     @property
     def unique_id(self):

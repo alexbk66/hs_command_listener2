@@ -23,6 +23,7 @@ class JsonDataclass:
             obj.post_init()
         return obj
 
+
 @dataclass
 class Command(JsonDataclass):
     command: str
@@ -30,6 +31,8 @@ class Command(JsonDataclass):
     name: str
     entityID: str
     force: bool = True
+    min: float = None
+    max: float = None
 
     def post_init(self):
         self.name = self.name.strip()

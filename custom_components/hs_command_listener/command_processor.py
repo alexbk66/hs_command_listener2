@@ -14,11 +14,6 @@ from .const import COMMAND_DEBUG, COMMAND_PURGE, COMMAND_CREATE, COMMAND_ENABLE,
 _LOGGER = logging.getLogger(__name__)
 DEBUG_ENABLED = True # False
 
-# Note - possibly requires adding manually 
-# in \\192.168.68.84\config\configuration.yaml
-#
-# hs_command_listener:
-#  - platform: hs_command_listener
 
 
 class CommandProcessor:
@@ -49,8 +44,11 @@ class CommandProcessor:
             if not entityID:
                 entityID = name.strip().lower().replace(" ", "_")
                 _LOGGER.warning("Legacy entity entry missing entityID; derived as: %s", entityID)
-        
+            
+            #####################################################################
             await self._create_entity(entity_type, entityID, name, persist=False)
+            #####################################################################
+
             normalized_entities.append({
                 STR_TYPE: entity_type,
                 STR_NAME: name,
@@ -129,7 +127,36 @@ class CommandProcessor:
                     registry.async_remove(existing.entity_id)
                 # --- END CHANGE ---
 
+        #####################################################################
         await self._create_entity(entity_type, entityID, name, persist=True)
+        #####################################################################
+
+
+
+    async def _create_entity(self, entity_type, entityID, name, persist=True):
+        _LOGGER.debug("Creating entity type=%s entityID=%s name=%s", entity_type, entityID, name)
+
+        if entity_type in self.entity_classes:
+            try:
+                entity_class = self.entity_classes[entity_type]
+
+                entity = entity_class(entityID, name)
+
+                component = EntityComponent(_LOGGER, entity.platform, self.hass)
+                _LOGGER.debug("Assigning unique_id: %s", entity._attr_unique_id)
+                await component.async_add_entities([entity])
+                _LOGGER.debug("Dynamic entity created: %s.%s", entity.platform, entityID)
+            except Exception as e:
+                _LOGGER.exception("Error creating dynamic entity %s: %s", entityID, e)
+                return
+        else:
+            _LOGGER.warning("Entity type %s not supported and no dynamic class found.", entity_type)
+            return
+
+        if persist:
+            self.entities.append({STR_TYPE: entity_type, STR_ENTITYID: entityID, STR_NAME: name})
+            await self.store.async_save(self.entities)
+            _LOGGER.debug("Persisted entities updated: %s", self.entities)
 
 
     async def _handle_special_command(self, command: Command) -> bool:
@@ -153,27 +180,3 @@ class CommandProcessor:
             _LOGGER.warning("All dynamically persisted entities have been purged")
             return True
         return False
-
-
-    async def _create_entity(self, entity_type, entityID, name, persist=True):
-        _LOGGER.debug("Creating entity type=%s entityID=%s name=%s", entity_type, entityID, name)
-
-        if entity_type in self.entity_classes:
-            try:
-                entity_class = self.entity_classes[entity_type]
-                entity = entity_class(entityID, name)
-                component = EntityComponent(_LOGGER, entity.platform, self.hass)
-                _LOGGER.debug("Assigning unique_id: %s", entity._attr_unique_id)
-                await component.async_add_entities([entity])
-                _LOGGER.debug("Dynamic entity created: %s.%s", entity.platform, entityID)
-            except Exception as e:
-                _LOGGER.exception("Error creating dynamic entity %s: %s", entityID, e)
-                return
-        else:
-            _LOGGER.warning("Entity type %s not supported and no dynamic class found.", entity_type)
-            return
-
-        if persist:
-            self.entities.append({STR_TYPE: entity_type, STR_ENTITYID: entityID, STR_NAME: name})
-            await self.store.async_save(self.entities)
-            _LOGGER.debug("Persisted entities updated: %s", self.entities)
