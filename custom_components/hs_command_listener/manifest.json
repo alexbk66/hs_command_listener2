@@ -2,6 +2,7 @@
   "domain": "hs_command_listener",
   "name": "HS Command Listener",
   "codeowners": [ "@alexbk66" ],
+  "config_flow": true,
   "dependencies": [],
   "documentation": "https://forums.homeseer.com/forum/hs4-products/hs4-plugins/lighting-primary-technology-plug-ins-aa/ak-homeassistant-alexbk66/1638735-homeassistant-plugin-hass-introduction-configuration",
   "integration_type": "helper",
@@ -9,5 +10,5 @@
   "issue_tracker": "https://github.com/alexbk66/hs_command_listener2/issues",
   "quality_scale": "bronze",
   "requirements": [],
-  "version": "1.13"
+  "version": "1.14"
 }

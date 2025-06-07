@@ -22,6 +22,9 @@
     <Compile Include="command.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="config_flow.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="const.py">
       <SubType>Code</SubType>
     </Compile>
@@ -34,8 +37,8 @@
     <Compile Include="__init__.py" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include=".github\hacs.json" />
     <Content Include=".github\workflows\hassfest.yaml" />
+    <Content Include="manifest.json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include=".github\" />

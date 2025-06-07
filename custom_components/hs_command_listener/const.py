@@ -1,6 +1,8 @@
 DOMAIN = "hs_command_listener"
 ENTITY_ID_COMMAND = "hs_command_input2"
 STORAGE_KEY = "hs_command_listener_entities"
+TITLE = "HS Command Listener"
+
 
 COMMAND_CREATE = "create"
 COMMAND_DEBUG = "debug"

@@ -61,6 +61,11 @@ class CommandProcessor:
         await self.store.async_save(self.entities)
 
 
+    async def async_shutdown(self):
+        # implement cleanup if needed
+        pass
+
+
     async def monitor(self):
         _LOGGER.debug("Monitoring state changes for %s", ENTITY_ID_COMMAND)
         async def handle_state_change(event):

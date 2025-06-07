@@ -18,3 +18,4 @@ esphome/
 tts/
 custom_components/hs_command_listener/hs_command_listener.pyproj.user
 custom_components/hs_command_listener/.github/hacs.json
+custom_components/hs_command_listener/.vs/
