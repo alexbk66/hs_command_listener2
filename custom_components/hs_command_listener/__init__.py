@@ -12,8 +12,8 @@ CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = ["text", "switch"]
 PLATFORM = "text"
+PLATFORMS = [PLATFORM] # , "switch"
 
 
 async def _setup_command_processor(hass: HomeAssistant):
@@ -26,31 +26,31 @@ async def _setup_command_processor(hass: HomeAssistant):
     return processor
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up via YAML (legacy support)."""
-    
-    _LOGGER.debug("Setting up hs_command_listener integration")
-
-    # Load the text platform to create the command input
-    await discovery.async_load_platform(hass, PLATFORM, DOMAIN, {}, config)
-    _LOGGER.debug("Text platform loaded")
-
-    # Initialize command processor
-    await _setup_command_processor(hass)
-
-    return True
+#async def async_setup(hass: HomeAssistant, config: dict):
+#    """Set up via YAML (legacy support)."""
+#    
+#    _LOGGER.debug("Setting up hs_command_listener integration")
+#
+#    # Load the text platform to create the command input
+#    await discovery.async_load_platform(hass, PLATFORM, DOMAIN, {}, config)
+#    _LOGGER.debug("Text platform loaded")
+#
+#    # Initialize command processor
+#    await _setup_command_processor(hass)
+#
+#    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up from a config entry."""
-    LOGGER.debug("Setting up hs_command_listener integration via config entry")
+    _LOGGER.debug("Setting up hs_command_listener integration via config entry")
 
     # Get configuration data from the config entry
     # entry.data contains the data from the config flow
     #config_data = entry.data
 
     # Initialize command processor
-    await _setup_command_processor(hass)
+    processor = await _setup_command_processor(hass)
 
     # Store processor in hass.data for later access/unload
     hass.data.setdefault(DOMAIN, {})
