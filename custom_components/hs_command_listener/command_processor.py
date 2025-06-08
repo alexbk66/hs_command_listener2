@@ -4,7 +4,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, ENTITY_ID_COMMAND, STR_ENTITYID, STR_NAME, STR_TYPE
-from .const import COMMAND_DEBUG, COMMAND_PURGE, COMMAND_CREATE, COMMAND_ENABLE, COMMAND_DISABLE
+from .const import COMMAND_DEBUG, COMMAND_PURGE, COMMAND_CREATE, COMMAND_DELETE, COMMAND_ENABLE, COMMAND_DISABLE
 
 from .command import Command
 from .storage import EntityStore
@@ -41,11 +41,15 @@ class CommandProcessor:
 
             if entity_id != f"text.{ENTITY_ID_COMMAND}":
                 return
+
             state = event.data.get("new_state")
             _LOGGER.debug("Detected text entity state change: %s", state)
             if not state or not state.state:
                 return
+
+            #######################################
             await self.process_command(state.state)
+            #######################################
 
         self.hass.bus.async_listen("state_changed", _listener)
 

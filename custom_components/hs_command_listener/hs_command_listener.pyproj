@@ -30,9 +30,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="command_processor.py" />
-    <Compile Include="entities.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="number.py">
       <SubType>Code</SubType>
     </Compile>

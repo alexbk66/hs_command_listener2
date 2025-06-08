@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Type, TypeVar, Any, Dict
+from typing import Type, TypeVar, Any, Dict, Optional
 
 T = TypeVar('T', bound='JsonDataclass')
 
@@ -28,8 +28,8 @@ class JsonDataclass:
 class Command(JsonDataclass):
     command: str
     type: str
-    name: str
     entityID: str
+    name: Optional[str] = None  
     force: bool = True
     min: float = None
     max: float = None
@@ -39,3 +39,15 @@ class Command(JsonDataclass):
         self.entityID = self.entityID.strip().lower().replace(" ", "_")
         if not hasattr(self, "force") or self.force is None:
             self.force = True
+
+    # called automatically after __init__
+    def __post_init__(self) -> None:
+        # If name is omitted or empty, use entityID
+        if not self.name:
+            self.name = self.entityID
+
+    @classmethod
+    def from_json(cls, json_str: str) -> "Command":
+        # allow pretty-printed JSON
+        clean = json_str.replace("\r", "").replace("\n", "")
+        return cls(**json.loads(clean))
