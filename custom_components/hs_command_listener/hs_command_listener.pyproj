@@ -32,6 +32,9 @@
     <Compile Include="entities.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="number.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="storage.py" />
     <Compile Include="text.py" />
     <Compile Include="__init__.py" />

@@ -1,8 +1,9 @@
-import logging
 import re
+import logging
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers import entity_registry as er
 
 from .storage import EntityStore
@@ -46,7 +47,7 @@ class CommandProcessor:
                 _LOGGER.warning("Legacy entity entry missing entityID; derived as: %s", entityID)
             
             #####################################################################
-            await self._create_entity(entity_type, entityID, name, persist=False)
+            await self._create_entity(entity_type, entityID, name, command=None, persist=False)
             #####################################################################
 
             normalized_entities.append({
@@ -101,62 +102,129 @@ class CommandProcessor:
 
         _LOGGER.debug("Processing command: %s", command)
 
+        #####################################################################
         if await self._handle_special_command(command):
             return
-
-        if command.command.lower() != "create":
-            _LOGGER.debug("Unsupported command type: %s", command.command)
-            return
+        #####################################################################
 
         entity_type = command.type.upper()
         name = command.name
         entityID = command.entityID
         force = getattr(command, "force", True)
 
-        if any(e for e in self.entities if e[STR_ENTITYID] == entityID and e[STR_TYPE] == entity_type):
+        cmd_type = command.command.lower()
+
+        if cmd_type == "create":
+            await self._handle_create_command(command)
+        elif cmd_type == "delete":
+            await self._delete_entity(command)
+        else:
+            _LOGGER.debug("Unsupported command type: %s", cmd_type)
+
+
+    async def _handle_create_command(self, command: Command):
+        entity_type = command.type.upper()
+        name = command.name
+        entityID = command.entityID
+        force = getattr(command, "force", True)
+
+        platform_name = self.entity_classes[entity_type](entityID, name).platform
+        full_entity_id = f"{platform_name}.{entityID}"
+        registry = er.async_get(self.hass)
+        existing = registry.async_get(full_entity_id)
+
+        if existing:
             if not force:
-                _LOGGER.debug("Entity already exists: %s %s", entity_type, entityID)
+                _LOGGER.debug("Entity already exists in registry and force is false: %s", full_entity_id)
                 return
-            else:
-                # --- START CHANGE: Force delete existing entity from registry ---
-                registry = er.async_get(self.hass)
-                platform_name = self.entity_classes[entity_type](entityID, name).platform
-                existing = registry.async_get(f"{platform_name}.{entityID}")
-                if existing:
-                    _LOGGER.warning("Entity %s already exists; removing from registry to force recreation", existing.entity_id)
-                    registry.async_remove(existing.entity_id)
-                # --- END CHANGE ---
+            _LOGGER.warning("Entity %s already exists; removing from registry to force recreation", full_entity_id)
+            registry.async_remove(existing.entity_id)
+
+        # Clean any existing in-memory entry before adding
+        self.entities = [
+            e for e in self.entities
+            if not (e[STR_TYPE] == entity_type and e[STR_ENTITYID] == entityID)
+        ]
 
         #####################################################################
-        await self._create_entity(entity_type, entityID, name, persist=True)
+        await self._create_entity(entity_type, entityID, name, command=command, persist=True)
         #####################################################################
 
 
-
-    async def _create_entity(self, entity_type, entityID, name, persist=True):
+    async def _create_entity(self, entity_type, entityID, name, command: Command = None, persist=True):
         _LOGGER.debug("Creating entity type=%s entityID=%s name=%s", entity_type, entityID, name)
 
-        if entity_type in self.entity_classes:
-            try:
-                entity_class = self.entity_classes[entity_type]
+        if entity_type not in self.entity_classes:
+            _LOGGER.warning("Entity type %s not supported and no dynamic class found.", entity_type)
+            return
 
+        try:
+            entity_class = self.entity_classes[entity_type]
+
+            # Create entity with extra parameters if needed
+            if entity_type == "NUMBER":
+                min_val = command.min if command else None
+                max_val = command.max if command else None
+                entity = entity_class(entityID, name, min_val, max_val)
+
+            elif entity_type == "SELECT":
+                options = getattr(command, "options", None) if command else None
+                entity = entity_class(entityID, name, options)
+
+            else:
                 entity = entity_class(entityID, name)
 
-                component = EntityComponent(_LOGGER, entity.platform, self.hass)
-                _LOGGER.debug("Assigning unique_id: %s", entity._attr_unique_id)
-                await component.async_add_entities([entity])
-                _LOGGER.debug("Dynamic entity created: %s.%s", entity.platform, entityID)
-            except Exception as e:
-                _LOGGER.exception("Error creating dynamic entity %s: %s", entityID, e)
-                return
-        else:
-            _LOGGER.warning("Entity type %s not supported and no dynamic class found.", entity_type)
+            component = EntityComponent(_LOGGER, entity.platform, self.hass)
+            _LOGGER.debug("Assigning unique_id: %s", entity._attr_unique_id)
+            await component.async_add_entities([entity])
+            _LOGGER.debug("Dynamic entity created: %s.%s", entity.platform, entityID)
+
+        except Exception as e:
+            _LOGGER.exception("Error creating dynamic entity %s: %s", entityID, e)
             return
 
         if persist:
             self.entities.append({STR_TYPE: entity_type, STR_ENTITYID: entityID, STR_NAME: name})
             await self.store.async_save(self.entities)
             _LOGGER.debug("Persisted entities updated: %s", self.entities)
+
+
+    async def _delete_entity(self, command: Command):
+        entity_type = command.type.upper()
+        entity_id = command.entityID
+
+        if not entity_type or not entity_id:
+            _LOGGER.warning("Missing type or entityID in delete command")
+            return
+
+        try:
+            # Get platform name (e.g. "switch", "number")
+            entity_class = self.entity_classes.get(entity_type)
+            if not entity_class:
+                _LOGGER.warning("Unknown entity type: %s", entity_type)
+                return
+
+            platform = entity_class(entity_id, "dummy").platform
+            full_entity_id = f"{platform}.{entity_id}"
+
+            # Remove from HA registry
+            registry = er.async_get(self.hass)
+            if registry.async_get(full_entity_id):
+                registry.async_remove(full_entity_id)
+                _LOGGER.info("Deleted entity: %s", full_entity_id)
+            else:
+                _LOGGER.warning("Entity not found in registry: %s", full_entity_id)
+
+            # Remove from internal list
+            self.entities = [
+                e for e in self.entities
+                if not (e[STR_TYPE] == entity_type and e[STR_ENTITYID] == entity_id)
+            ]
+
+            await self.store.async_save(self.entities)
+
+        except Exception as e:
+            _LOGGER.exception("Failed to delete entity %s: %s", entity_id, e)
 
 
     async def _handle_special_command(self, command: Command) -> bool:
@@ -174,9 +242,11 @@ class CommandProcessor:
             else:
                 _LOGGER.warning("Unknown debug command type: %s", command.type)
             return True
+
         elif cmd == COMMAND_PURGE:
             self.entities = []
             await self.store.async_save(self.entities)
             _LOGGER.warning("All dynamically persisted entities have been purged")
             return True
+
         return False

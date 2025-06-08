@@ -22,12 +22,12 @@ def get_device_info():
 
 class DynamicToggle(SwitchEntity):
     def __init__(self, entity_id, name):
+        self.platform = "switch"
         self.entity_id = f"switch.{entity_id}"
-        self._attr_name = name
         self._attr_unique_id = f"toggle_{entity_id}"
+        self._attr_name = name
         self._attr_is_on = False
         self._attr_should_poll = False
-        self.platform = "switch"
 
     @property
     def device_info(self):
@@ -62,9 +62,10 @@ class DynamicToggle(SwitchEntity):
 
 class DynamicButton(ButtonEntity):
     def __init__(self, entity_id, name):
-        self._attr_name = name
-        self._attr_unique_id = f"button_{entity_id}"
         self.platform = "button"
+        self.entity_id = f"button.{entity_id}"
+        self._attr_unique_id = f"button_{entity_id}"
+        self._attr_name = name
         self._pressed = False
 
     @property
@@ -82,16 +83,21 @@ class DynamicButton(ButtonEntity):
 
 
 class DynamicNumber(NumberEntity):
-    def __init__(self, entity_id, name):
-        self._attr_name = name
-        self._attr_unique_id = f"number_{entity_id}"
+    def __init__(self, entity_id, name, min_value=None, max_value=None, step=None):
         self.platform = "number"
-        self._attr_native_value = 0
-        self._attr_min_value = 0
-        self._attr_max_value = 100
-        self._attr_step = 1
+        self.entity_id = f"number.{entity_id}"
+        self._attr_unique_id = f"number_{entity_id}"
+        self._attr_name = name
+
+        self._attr_min_value = min_value if min_value is not None else 0
+        self._attr_max_value = max_value if max_value is not None else 100
+        self._attr_native_value = self._attr_min_value
+        self._attr_step = step if step is not None else 1
         self._attr_should_poll = False
 
+        _LOGGER.debug("DynamicNumber created: %s (min=%s, max=%s)", self._attr_unique_id, self._attr_min_value, self._attr_max_value)
+
+    
     @property
     def device_info(self):
         return get_device_info()
@@ -108,9 +114,9 @@ class DynamicNumber(NumberEntity):
 
 class DynamicSelect(SelectEntity):
     def __init__(self, entity_id, name):
-        self._attr_name = name
-        self._attr_unique_id = f"select_{entity_id}"
         self.platform = "select"
+        self._attr_unique_id = f"select_{entity_id}"
+        self._attr_name = name
         self._attr_options = ["Option 1", "Option 2", "Option 3"]
         self._attr_current_option = self._attr_options[0]
         self._attr_should_poll = False

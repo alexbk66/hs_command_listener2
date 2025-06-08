@@ -2,6 +2,7 @@ import logging
 import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.config_entries import ConfigEntry
 
 from .command_processor import CommandProcessor
@@ -13,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM = "text"
-PLATFORMS = [PLATFORM] # , "switch"
+PLATFORMS = [PLATFORM, "number"] # , "switch"
 
 
 async def _setup_command_processor(hass: HomeAssistant):
@@ -24,21 +25,6 @@ async def _setup_command_processor(hass: HomeAssistant):
     await processor.monitor()
     _LOGGER.debug("CommandProcessor monitoring started")
     return processor
-
-
-#async def async_setup(hass: HomeAssistant, config: dict):
-#    """Set up via YAML (legacy support)."""
-#    
-#    _LOGGER.debug("Setting up hs_command_listener integration")
-#
-#    # Load the text platform to create the command input
-#    await discovery.async_load_platform(hass, PLATFORM, DOMAIN, {}, config)
-#    _LOGGER.debug("Text platform loaded")
-#
-#    # Initialize command processor
-#    await _setup_command_processor(hass)
-#
-#    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -58,6 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Forward setup to platform(s), like text
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    
+    # Notify dynamic platforms to register
+    async_dispatcher_send(hass, f"{DOMAIN}_platform_reload")
 
     return True
 
