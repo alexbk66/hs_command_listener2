@@ -100,11 +100,22 @@ class CommandProcessor:
 
     async def _delete(self, cmd: Command):
         uid = f"{cmd.type.lower()}_{cmd.entityID}"
+        # 1️ Remove from registry
         registry = er.async_get(self.hass)
         to_remove = [e.entity_id for e in registry.entities.values() if e.unique_id == uid]
         for ent_id in to_remove:
             registry.async_remove(ent_id)
             _LOGGER.debug("Removed entity from registry: %s", ent_id)
+
+        # 2️ Remove from the running state-machine
+        self.hass.states.async_remove(entity_id)
+
+        # 3️ Remove the preserved “restore” entry so it won’t come back on restart
+        restorer: RestoreStateData | None = self.hass.data.get("restore_state")
+        if restorer and entity_id in restorer.last_states:
+            del restorer.last_states[entity_id]
+
+        # 4️ Update our own storage
         self.entities = [e for e in self.entities if not (e[STR_TYPE]==cmd.type and e[STR_ENTITYID]==cmd.entityID)]
         await self.store.async_save(self.entities)
 
