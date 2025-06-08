@@ -1,15 +1,17 @@
+
 DOMAIN = "hs_command_listener"
+
 ENTITY_ID_COMMAND = "hs_command_input2"
-STORAGE_KEY = "hs_command_listener_entities"
-TITLE = "HS Command Listener"
 
-
-COMMAND_CREATE = "create"
-COMMAND_DEBUG = "debug"
-COMMAND_PURGE = "purge"
-COMMAND_ENABLE = "ENABLE"
-COMMAND_DISABLE = "DISABLE"
-
+STR_TYPE = "type"
 STR_ENTITYID = "entityID"
 STR_NAME = "name"
-STR_TYPE = "type"
+
+COMMAND_CREATE = "create"
+COMMAND_DELETE = "delete"
+COMMAND_PURGE = "purge"
+COMMAND_DEBUG = "debug"
+COMMAND_ENABLE = "enable"
+COMMAND_DISABLE = "disable"
+
+PLATFORMS = ["switch", "number", "button", "select", "text"]

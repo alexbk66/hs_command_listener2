@@ -19,6 +19,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="button.py" />
     <Compile Include="command.py">
       <SubType>Code</SubType>
     </Compile>
@@ -35,7 +36,9 @@
     <Compile Include="number.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="select.py" />
     <Compile Include="storage.py" />
+    <Compile Include="switch.py" />
     <Compile Include="text.py" />
     <Compile Include="__init__.py" />
   </ItemGroup>
