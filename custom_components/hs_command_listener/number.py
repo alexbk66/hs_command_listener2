@@ -32,11 +32,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entity_type != "NUMBER":
             return
 
-        async_add_entities([DynamicNumber(
+        entity = DynamicNumber(
             entity_id, name,
             getattr(command, "min", 0),
             getattr(command, "max", 100),
             getattr(command, "step", 1)
-        )])
+        )
+        #async_add_entities([entity])
+        hass.async_create_task(async_add_entities([entity]))
+
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handler)

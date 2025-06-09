@@ -42,6 +42,7 @@ async def async_setup_entry(
             return
         
         entity = DynamicToggle(entity_id, name)
-        async_add_entities([entity])         # now safely awaited in loop
+        #async_add_entities([entity])
+        hass.async_create_task(async_add_entities([entity]))
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handler)
