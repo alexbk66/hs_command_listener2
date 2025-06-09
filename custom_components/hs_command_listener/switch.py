@@ -36,7 +36,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Listen for dispatcher signals and create switches."""    
+    """Listen for dispatcher signals and create switches."""
+
     async def _handler(entity_type, entity_id, name, command):
         if entity_type != "TOGGLE":
             return

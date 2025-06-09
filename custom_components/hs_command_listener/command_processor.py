@@ -100,6 +100,8 @@ class CommandProcessor:
 
     async def _delete(self, cmd: Command):
         uid = f"{cmd.type.lower()}_{cmd.entityID}"
+        entity_id = f"{cmd.type.lower()}.{cmd.entityID}"
+
         # 1️ Remove from registry
         registry = er.async_get(self.hass)
         to_remove = [e.entity_id for e in registry.entities.values() if e.unique_id == uid]

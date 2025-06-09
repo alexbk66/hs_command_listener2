@@ -5,7 +5,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from homeassistant.components.select import SelectEntity
+
+from .command import Command
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
