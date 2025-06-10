@@ -80,6 +80,9 @@ class CommandProcessor:
 
     async def _create(self, cmd: Command):
         _LOGGER.debug("Processing CREATE command: %s", cmd)
+        if cmd.type is None or cmd.entityID is None:
+            _LOGGER.warning("CREATE/DELETE requires type and entityID")
+            return
         # Remove any duplicate record in self.entities
         self.entities = [e for e in self.entities if not (e[STR_TYPE]==cmd.type and e[STR_ENTITYID]==cmd.entityID)]
         await self._dispatch_create(cmd.type, cmd.entityID, cmd.name, cmd)
@@ -99,6 +102,10 @@ class CommandProcessor:
 
 
     async def _delete(self, cmd: Command):
+        if cmd.type is None or cmd.entityID is None:
+            _LOGGER.warning("CREATE/DELETE requires type and entityID")
+            return
+
         uid = f"{cmd.type.lower()}_{cmd.entityID}"
         entity_id = f"{cmd.type.lower()}.{cmd.entityID}"
 
@@ -122,10 +129,38 @@ class CommandProcessor:
         await self.store.async_save(self.entities)
 
 
-    async def _purge(self):
-        self.entities.clear()
+    async def _purge(self) -> None:
+        """Delete every dynamic entity we know about — registry, states, storage."""
+        registry = er.async_get(self.hass)
+
+        # iterate over a copy, because we'll mutate self.entities
+        for item in list(self.entities):
+            entity_type = item[STR_TYPE]
+            entity_id   = item[STR_ENTITYID]
+
+            # full entity_id, e.g. "switch.homeseer_713"
+            full_id = f"{entity_type.lower()}.{entity_id}"
+            uid     = f"{entity_type.lower()}_{entity_id}"
+
+            # 1️. remove from registry
+            ent = registry.async_get(full_id)
+            if ent:
+                registry.async_remove(full_id)
+
+            # 2️. remove from running state-machine
+            self.hass.states.async_remove(full_id)
+
+            # 3️. remove from restore cache
+            restorer = self.hass.data.get("restore_state")
+            if restorer and full_id in restorer.last_states:
+                del restorer.last_states[full_id]
+
+            # 4️. drop from our internal list
+            self.entities.remove(item)
+
         await self.store.async_save(self.entities)
-        _LOGGER.warning("All entities purged")
+        _LOGGER.warning("All dynamic entities purged from registry, state, and storage")
+
 
 
     async def _handle_special_command(self, command: Command) -> bool:
@@ -145,7 +180,7 @@ class CommandProcessor:
             return True
 
         elif cmd == COMMAND_PURGE:
-            self._purge()
+            await self._purge()
             return True
 
         return False

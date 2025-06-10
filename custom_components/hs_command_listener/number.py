@@ -38,8 +38,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             getattr(command, "max", 100),
             getattr(command, "step", 1)
         )
-        #async_add_entities([entity])
-        hass.async_create_task(async_add_entities([entity]))
+
+        async_add_entities([entity])          # ← just call, no await / no task
+        #hass.async_create_task(async_add_entities([entity]))
 
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handler)

@@ -12,6 +12,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry: ConfigEntry):
     # Initialize command processor
     processor = CommandProcessor(hass)
+
+    # forward the platforms FIRST
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # now restore entities (platforms are ready)
     await processor.async_initialize()
     _LOGGER.debug("CommandProcessor initialized with entities: %s", processor.entities)
 
@@ -23,7 +28,7 @@ async def async_setup_entry(hass, entry: ConfigEntry):
     _LOGGER.debug("CommandProcessor monitoring started")
 
     # Forward setup to platform(s), like text
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    #await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Notify dynamic platforms to register ?
     async_dispatcher_send(hass, f"{DOMAIN}_platform_reload")

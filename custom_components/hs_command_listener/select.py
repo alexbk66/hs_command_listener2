@@ -45,9 +45,9 @@ async def async_setup_entry(
         entity  = DynamicSelect(
                 entity_id,
                 name,
-                getattr(command, "options", None)
+                getattr(command, "selects", None)
             )
-        #async_add_entities([entity])
-        hass.async_create_task(async_add_entities([entity]))
+        async_add_entities([entity])          # ← just call, no await / no task
+        #hass.async_create_task(async_add_entities([entity]))
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handle_create)

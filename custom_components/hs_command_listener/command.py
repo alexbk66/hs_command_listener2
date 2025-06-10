@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass, fields, is_dataclass
-from typing import Type, TypeVar, Any, Dict, Optional
+from typing import Type, TypeVar, Any, Dict, Optional, List
 
 T = TypeVar('T', bound='JsonDataclass')
 
@@ -27,12 +27,13 @@ class JsonDataclass:
 @dataclass
 class Command(JsonDataclass):
     command: str
-    type: str
-    entityID: str
+    type: Optional[str] = None
+    entityID: Optional[str] = None
     name: Optional[str] = None  
     force: bool = True
     min: float = None
     max: float = None
+    selects: Optional[List[str]] = None
 
     def post_init(self):
         self.name = self.name.strip()
