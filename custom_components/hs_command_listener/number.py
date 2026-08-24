@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from homeassistant.components.number import NumberEntity
 from .const import DOMAIN
+from .device import apply_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +35,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         entity = DynamicNumber(
             entity_id, name,
-            getattr(command, "min", 0),
-            getattr(command, "max", 100),
-            getattr(command, "step", 1)
+            command.min if command.min is not None else 0,
+            command.max if command.max is not None else 100,
+            command.step if command.step is not None else 1,
         )
 
-        async_add_entities([entity])          # ← just call, no await / no task
-        #hass.async_create_task(async_add_entities([entity]))
+        apply_device_info(entity, command)
+        async_add_entities([entity])
 
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handler)

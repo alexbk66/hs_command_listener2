@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from homeassistant.components.switch import SwitchEntity
 from .const import DOMAIN
+from .device import apply_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ async def async_setup_entry(
             return
         
         entity = DynamicToggle(entity_id, name)
-        async_add_entities([entity])          # ← just call, no await / no task
-        #hass.async_create_task(async_add_entities([entity]))
+        apply_device_info(entity, command)
+        async_add_entities([entity])
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handler)

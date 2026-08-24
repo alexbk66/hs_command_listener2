@@ -1,5 +1,6 @@
 
 import logging
+from dataclasses import asdict
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -21,14 +22,22 @@ class CommandProcessor:
     async def async_initialize(self):
         self.entities = await self.store.async_load()
         _LOGGER.debug("Restoring %s entities from storage", len(self.entities))
+
         for item in self.entities:
-            await self._dispatch_create(item[STR_TYPE], item[STR_ENTITYID], item[STR_NAME], Command(
-                command=COMMAND_CREATE,
-                type=item[STR_TYPE],
-                name=item[STR_NAME],
-                entityID=item[STR_ENTITYID],
-                force=False
-            ))
+            # Restore the complete create command. Older stored records contain only
+            # type/entityID/name, so missing optional fields use Command defaults.
+            cmd = Command.from_dict({
+                **item,
+                "command": COMMAND_CREATE,
+                "force": False
+            })
+
+            await self._dispatch_create(
+                cmd.type,
+                cmd.entityID,
+                cmd.name,
+                cmd
+            )
 
 
     async def monitor(self):
@@ -86,7 +95,9 @@ class CommandProcessor:
         # Remove any duplicate record in self.entities
         self.entities = [e for e in self.entities if not (e[STR_TYPE]==cmd.type and e[STR_ENTITYID]==cmd.entityID)]
         await self._dispatch_create(cmd.type, cmd.entityID, cmd.name, cmd)
-        self.entities.append({STR_TYPE: cmd.type, STR_ENTITYID: cmd.entityID, STR_NAME: cmd.name})
+        # Preserve all entity-specific creation parameters so the entity can be
+        # recreated identically after Home Assistant restarts.
+        self.entities.append(asdict(cmd))
         await self.store.async_save(self.entities)
 
 
@@ -101,13 +112,19 @@ class CommandProcessor:
         )
 
 
+    @staticmethod
+    def _entity_domain(entity_type: str) -> str:
+        """Return the Home Assistant domain for a command entity type."""
+
+        return "switch" if entity_type.upper() == "TOGGLE" else entity_type.lower()
+
     async def _delete(self, cmd: Command):
         if cmd.type is None or cmd.entityID is None:
             _LOGGER.warning("CREATE/DELETE requires type and entityID")
             return
 
         uid = f"{cmd.type.lower()}_{cmd.entityID}"
-        entity_id = f"{cmd.type.lower()}.{cmd.entityID}"
+        entity_id = f"{self._entity_domain(cmd.type)}.{cmd.entityID}"
 
         # 1️ Remove from registry
         registry = er.async_get(self.hass)
@@ -139,8 +156,7 @@ class CommandProcessor:
             entity_id   = item[STR_ENTITYID]
 
             # full entity_id, e.g. "switch.homeseer_713"
-            full_id = f"{entity_type.lower()}.{entity_id}"
-            uid     = f"{entity_type.lower()}_{entity_id}"
+            full_id = f"{self._entity_domain(entity_type)}.{entity_id}"
 
             # 1️. remove from registry
             ent = registry.async_get(full_id)

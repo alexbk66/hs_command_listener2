@@ -10,6 +10,7 @@ from homeassistant.components.select import SelectEntity
 
 from .command import Command
 from .const import DOMAIN
+from .device import apply_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ async def async_setup_entry(
                 name,
                 getattr(command, "selects", None)
             )
-        async_add_entities([entity])          # ← just call, no await / no task
-        #hass.async_create_task(async_add_entities([entity]))
+        apply_device_info(entity, command)
+        async_add_entities([entity])
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handle_create)

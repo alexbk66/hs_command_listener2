@@ -9,6 +9,7 @@ from homeassistant.components.text import TextEntity
 
 from .command import Command
 from .const import DOMAIN, ENTITY_ID_COMMAND
+from .device import apply_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,8 +52,8 @@ class DynamicText(TextEntity):
         self._attr_unique_id = f"text_{entity_id}"
         self._attr_name = name
         self._attr_native_value = ""
-        self._attr_min = min_chars
-        self._attr_max = max_chars
+        self._attr_native_min = min_chars
+        self._attr_native_max = max_chars
         self._attr_pattern = pattern  # shown as “Pattern” in the UI
 
     async def async_set_value(self, value: str) -> None:
@@ -99,14 +100,13 @@ async def async_setup_entry(
         entity = DynamicText(
             entity_id,
             name,
-            getattr(command, "min", 0),
-            getattr(command, "max", 255),
-            getattr(command, "pattern", None),
+            int(command.min) if command.min is not None else 0,
+            int(command.max) if command.max is not None else 255,
+            command.pattern,
         )
 
-        async_add_entities([entity])         # ← no await
-        #await async_add_entities([entity])
-        #hass.async_create_task(async_add_entities([entity]))
+        apply_device_info(entity, command)
+        async_add_entities([entity])
         _LOGGER.debug("DynamicText created: %s", entity.entity_id)
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handle_create)

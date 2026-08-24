@@ -27,17 +27,36 @@ class JsonDataclass:
 @dataclass
 class Command(JsonDataclass):
     command: str
+
     type: Optional[str] = None
     entityID: Optional[str] = None
-    name: Optional[str] = None  
+    name: Optional[str] = None
     force: bool = True
-    min: float = None
-    max: float = None
+
+    min: Optional[float] = None
+    max: Optional[float] = None
+    step: Optional[float] = None
     selects: Optional[List[str]] = None
+    pattern: Optional[str] = None
+
+    # Optional Home Assistant device grouping.
+    # Entities with the same deviceID belong to the same HS root device.
+    deviceID: Optional[str] = None
+    deviceName: Optional[str] = None
 
     def post_init(self):
-        self.name = self.name.strip()
-        self.entityID = self.entityID.strip().lower().replace(" ", "_")
+        if self.name:
+            self.name = self.name.strip()
+
+        if self.entityID:
+            self.entityID = self.entityID.strip().lower().replace(" ", "_")
+
+        if self.deviceID is not None:
+            self.deviceID = str(self.deviceID).strip()
+
+        if self.deviceName:
+            self.deviceName = self.deviceName.strip()
+
         if not hasattr(self, "force") or self.force is None:
             self.force = True
 
@@ -49,6 +68,7 @@ class Command(JsonDataclass):
 
     @classmethod
     def from_json(cls, json_str: str) -> "Command":
-        # allow pretty-printed JSON
+        """Deserialize a command while ignoring fields unknown to this version."""
+
         clean = json_str.replace("\r", "").replace("\n", "")
-        return cls(**json.loads(clean))
+        return cls.from_dict(json.loads(clean))

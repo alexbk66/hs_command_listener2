@@ -5,6 +5,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.button import ButtonEntity
 from .const import DOMAIN
+from .device import apply_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ async def async_setup_entry(
             return
 
         entity = DynamicButton(entity_id, name)
-        #async_add_entities([entity])
-        hass.async_create_task(async_add_entities([entity]))
+        apply_device_info(entity, command)
+        async_add_entities([entity])
 
     async_dispatcher_connect(hass, f"{DOMAIN}_create_entity", _handle_create)
