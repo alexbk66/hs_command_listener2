@@ -16,4 +16,5 @@ def apply_device_info(entity: Entity, command: Command) -> None:
     entity._attr_device_info = DeviceInfo(
         identifiers={(DOMAIN, f"device_{command.deviceID}")},
         name=command.deviceName,
+        suggested_area=command.deviceArea,
     )

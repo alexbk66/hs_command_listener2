@@ -43,6 +43,7 @@ class Command(JsonDataclass):
     # Entities with the same deviceID belong to the same HS root device.
     deviceID: Optional[str] = None
     deviceName: Optional[str] = None
+    deviceArea: Optional[str] = None
 
     def post_init(self):
         if self.name:
@@ -56,6 +57,9 @@ class Command(JsonDataclass):
 
         if self.deviceName:
             self.deviceName = self.deviceName.strip()
+
+        if self.deviceArea:
+            self.deviceArea = self.deviceArea.strip()
 
         if not hasattr(self, "force") or self.force is None:
             self.force = True
