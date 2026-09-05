@@ -21,6 +21,8 @@ class DynamicNumber(NumberEntity):
         self._attr_native_max_value = max_v
         self._attr_native_step = step
         self._attr_should_poll = False
+        # Generate a state event even when the requested value is unchanged.
+        self._attr_force_update = True
 
     async def async_set_native_value(self, value):
         self._attr_native_value = value

@@ -18,6 +18,8 @@ class DynamicToggle(SwitchEntity):
         self._attr_name = name
         self._attr_is_on = False
         self._attr_should_poll = False
+        # Generate a state event even when the requested state is unchanged.
+        self._attr_force_update = True
 
     @property
     def is_on(self):
