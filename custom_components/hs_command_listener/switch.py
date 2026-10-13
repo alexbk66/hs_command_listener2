@@ -16,7 +16,9 @@ class DynamicToggle(SwitchEntity):
         self.entity_id = f"switch.{entity_id}"
         self._attr_unique_id = f"toggle_{entity_id}"
         self._attr_name = name
-        self._attr_is_on = False
+        # HS is authoritative. Keep the entity unknown until AKHomeAssistant
+        # publishes the current HS state; never fabricate an initial Off value.
+        self._attr_is_on = None
         self._attr_should_poll = False
         # Generate a state event even when the requested state is unchanged.
         self._attr_force_update = True

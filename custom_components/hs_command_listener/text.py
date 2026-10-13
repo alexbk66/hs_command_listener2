@@ -51,7 +51,9 @@ class DynamicText(TextEntity):
         self.entity_id = f"text.{entity_id}"
         self._attr_unique_id = f"text_{entity_id}"
         self._attr_name = name
-        self._attr_native_value = ""
+        # HS is authoritative. Keep the entity unknown until AKHomeAssistant
+        # publishes the current HS text; never fabricate an empty string.
+        self._attr_native_value = None
         self._attr_native_min = min_chars
         self._attr_native_max = max_chars
         self._attr_pattern = pattern  # shown as “Pattern” in the UI

@@ -16,7 +16,9 @@ class DynamicNumber(NumberEntity):
         self.entity_id = f"number.{entity_id}"
         self._attr_unique_id = f"number_{entity_id}"
         self._attr_name = name
-        self._attr_native_value = min_v
+        # HS is authoritative. Keep the entity unknown until AKHomeAssistant
+        # publishes the current HS value; never fabricate the minimum value.
+        self._attr_native_value = None
         self._attr_native_min_value = min_v
         self._attr_native_max_value = max_v
         self._attr_native_step = step

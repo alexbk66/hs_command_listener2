@@ -25,7 +25,9 @@ class DynamicSelect(SelectEntity):
         self._attr_unique_id = f"select_{entity_id}"
         self._attr_name = name
         self._attr_options = options or ["Option 1", "Option 2"]
-        self._attr_current_option = self._attr_options[0]
+        # HS is authoritative. Keep the entity unknown until AKHomeAssistant
+        # publishes the current HS option; never fabricate the first option.
+        self._attr_current_option = None
 
     async def async_select_option(self, option: str) -> None:
         if option in self._attr_options:
