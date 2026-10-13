@@ -175,12 +175,7 @@ class CommandProcessor:
         # 2️ Remove from the running state-machine
         self.hass.states.async_remove(entity_id)
 
-        # 3️ Remove the preserved “restore” entry so it won’t come back on restart
-        restorer: RestoreStateData | None = self.hass.data.get("restore_state")
-        if restorer and entity_id in restorer.last_states:
-            del restorer.last_states[entity_id]
-
-        # 4️ Update our own storage
+        # 3️ Update our own storage
         self.entities = [e for e in self.entities if not (e[STR_TYPE]==cmd.type and e[STR_ENTITYID]==cmd.entityID)]
         await self.store.async_save(self.entities)
 
@@ -209,12 +204,7 @@ class CommandProcessor:
             # 2️. remove from running state-machine
             self.hass.states.async_remove(full_id)
 
-            # 3️. remove from restore cache
-            restorer = self.hass.data.get("restore_state")
-            if restorer and full_id in restorer.last_states:
-                del restorer.last_states[full_id]
-
-            # 4️. drop from our internal list
+            # 3️. drop from our internal list
             self.entities.remove(item)
 
         # Remove any devices which became empty after the purge.
